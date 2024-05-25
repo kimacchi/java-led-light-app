@@ -7,10 +7,12 @@ import android.annotation.SuppressLint;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothManager;
+import android.bluetooth.BluetoothSocket;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.util.Log;
@@ -25,12 +27,35 @@ import androidx.navigation.fragment.NavHostFragment;
 
 import com.example.led_control_application_3.databinding.FragmentSecondBinding;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.util.Objects;
 import java.util.Set;
+import java.util.UUID;
 
 public class SecondFragment extends Fragment {
 
     private static final int REQUEST_ENABLE_BT = 1;
+
+    private BluetoothSocket mmSocket = null;
+    private BluetoothDevice mmDevice = null;
+
+    protected static final String PREFS_FILE = "device_id.xml";
+    protected static final String PREFS_DEVICE_ID = "device_id";
     private FragmentSecondBinding binding;
+
+
+    private static final String TAG = "BluetoothCommActivity";
+    private static final UUID SERVICE_UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB"); // Use the same UUID as the connected device
+    private OutputStream outputStream;
+    private InputStream inputStream;
+
+
+//    public SecondFragment(BluetoothSocket mmSocket, BluetoothDevice mmDevice) {
+//        this.mmSocket = mmSocket;
+//        this.mmDevice = mmDevice;
+//    }
 
     @Override
     public View onCreateView(
@@ -45,6 +70,8 @@ public class SecondFragment extends Fragment {
 
     public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+
+        Context context = this.getContext();
 
         binding.buttonSecond.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -71,11 +98,11 @@ public class SecondFragment extends Fragment {
         }
 
 
-        @SuppressLint("MissingPermission") Set<BluetoothDevice> pairedDevices = bluetoothAdapter.getBondedDevices();
+        @SuppressLint("MissingPermission") Set<BluetoothDevice> pairedDevices_ = bluetoothAdapter.getBondedDevices();
 
-        if (pairedDevices.size() > 0) {
+        if (pairedDevices_.size() > 0) {
             // There are paired devices. Get the name and address of each paired device.
-            for (BluetoothDevice device : pairedDevices) {
+            for (BluetoothDevice device : pairedDevices_) {
                 @SuppressLint("MissingPermission") String deviceName = device.getName();
                 String deviceHardwareAddress = device.getAddress(); // MAC address
                 Log.d("PAIRED DEVICES", deviceName + " " + deviceHardwareAddress);
@@ -83,6 +110,51 @@ public class SecondFragment extends Fragment {
         } else {
             Log.d("PAIRED DEVICES", "There are no devices paired.");
         }
+
+
+        BluetoothDevice device_ = bluetoothAdapter.getRemoteDevice("E0:08:71:51:73:40");
+
+        binding.connectButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (ActivityCompat.checkSelfPermission(context, android.Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
+                    return;
+                }
+                Set<BluetoothDevice> pairedDevices = bluetoothAdapter.getBondedDevices();
+                if (!pairedDevices.isEmpty()) {
+                    for (BluetoothDevice device : pairedDevices) {
+                        // Assume you know the device's name or address
+                        if (device.getAddress().equals("E0:08:71:51:73:40")) {
+                            mmDevice = device;
+                            break;
+                        }
+                    }
+                }
+                // Connect to the device
+                if (mmDevice != null) {
+                    try {
+                        connectToDevice();
+                        binding.statusTextView.setText("Connected to " + mmDevice.getName());
+                    } catch (IOException e) {
+                        binding.statusTextView.setText("Connection failed: " + e.getMessage());
+                    }
+                } else {
+                    binding.statusTextView.setText("Device not found");
+                }
+            }
+        });
+    }
+
+
+    private void connectToDevice() throws IOException {
+        if (ActivityCompat.checkSelfPermission(getContext(), android.Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
+            return;
+        }
+        UUID uuid = mmDevice.getUuids()[0].getUuid(); // Replace with the correct UUID
+        mmSocket = mmDevice.createRfcommSocketToServiceRecord(uuid);
+        mmSocket.connect();
+        outputStream = mmSocket.getOutputStream();
+        inputStream = mmSocket.getInputStream();
     }
 
     @Override
