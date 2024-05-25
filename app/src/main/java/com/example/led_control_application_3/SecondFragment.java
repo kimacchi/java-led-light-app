@@ -3,6 +3,7 @@ package com.example.led_control_application_3;
 import static androidx.core.content.ContextCompat.getSystemService;
 import static androidx.core.content.ContextCompat.registerReceiver;
 
+import android.Manifest;
 import android.annotation.SuppressLint;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
@@ -165,7 +166,7 @@ public class SecondFragment extends Fragment {
 
 
     private void connectToDevice() throws IOException {
-        if (ActivityCompat.checkSelfPermission(getContext(), android.Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
+        if (ActivityCompat.checkSelfPermission(getContext(), android.Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(getContext(), Manifest.permission.BLUETOOTH_ADMIN) != PackageManager.PERMISSION_GRANTED) {
             return;
         }
         UUID uuid = mmDevice.getUuids()[0].getUuid(); // Replace with the correct UUID
