@@ -19,6 +19,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.core.app.ActivityCompat;
@@ -143,6 +144,23 @@ public class SecondFragment extends Fragment {
                 }
             }
         });
+
+        binding.sendButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                String message = binding.messageEditText.getText().toString();
+                if (!message.isEmpty()) {
+                    try {
+                        sendMessage(message);
+                        Toast.makeText(context, "Message sent", Toast.LENGTH_SHORT).show();
+                    } catch (IOException e) {
+                        binding.statusTextView.setText("Failed to send message: " + e.getMessage());
+                    }
+                } else {
+                    Toast.makeText(context, "Message is empty", Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
     }
 
 
@@ -155,6 +173,14 @@ public class SecondFragment extends Fragment {
         mmSocket.connect();
         outputStream = mmSocket.getOutputStream();
         inputStream = mmSocket.getInputStream();
+    }
+
+    private void sendMessage(String message) throws IOException {
+        if (outputStream != null) {
+            outputStream.write(message.getBytes());
+        } else {
+            throw new IOException("Output stream is null");
+        }
     }
 
     @Override
