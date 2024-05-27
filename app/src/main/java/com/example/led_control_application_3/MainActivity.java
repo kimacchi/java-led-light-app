@@ -54,7 +54,9 @@ public class MainActivity extends AppCompatActivity {
             android.Manifest.permission.ACCESS_LOCATION_EXTRA_COMMANDS,
             android.Manifest.permission.BLUETOOTH_SCAN,
             android.Manifest.permission.BLUETOOTH_CONNECT,
-            android.Manifest.permission.BLUETOOTH_PRIVILEGED
+            android.Manifest.permission.BLUETOOTH_PRIVILEGED,
+            android.Manifest.permission.CHANGE_WIFI_STATE,
+            android.Manifest.permission.ACCESS_WIFI_STATE
     };
     private static String[] PERMISSIONS_LOCATION = {
             Manifest.permission.BLUETOOTH,
@@ -65,12 +67,15 @@ public class MainActivity extends AppCompatActivity {
             android.Manifest.permission.ACCESS_LOCATION_EXTRA_COMMANDS,
             android.Manifest.permission.BLUETOOTH_SCAN,
             android.Manifest.permission.BLUETOOTH_CONNECT,
-            android.Manifest.permission.BLUETOOTH_PRIVILEGED
+            android.Manifest.permission.BLUETOOTH_PRIVILEGED,
+            android.Manifest.permission.CHANGE_WIFI_STATE,
+            android.Manifest.permission.ACCESS_WIFI_STATE
     };
 
     private void checkPermissions(){
         int permission1 = ActivityCompat.checkSelfPermission(this, android.Manifest.permission.WRITE_EXTERNAL_STORAGE);
         int permission2 = ActivityCompat.checkSelfPermission(this, android.Manifest.permission.BLUETOOTH_ADMIN);
+        int permission3 = ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_WIFI_STATE);
         if (permission1 != PackageManager.PERMISSION_GRANTED) {
             // We don't have permission so prompt the user
             ActivityCompat.requestPermissions(
@@ -84,7 +89,14 @@ public class MainActivity extends AppCompatActivity {
                     PERMISSIONS_LOCATION,
                     1
             );
+        } else if (permission3 != PackageManager.PERMISSION_GRANTED){
+            ActivityCompat.requestPermissions(
+                    this,
+                    new String[]{Manifest.permission.ACCESS_WIFI_STATE},
+                    1
+            );
         }
+
     }
 
     @SuppressLint("MissingPermission")
