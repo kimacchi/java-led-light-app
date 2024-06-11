@@ -37,6 +37,7 @@ import androidx.fragment.app.Fragment;
 import androidx.navigation.fragment.NavHostFragment;
 
 import com.example.led_control_application_3.databinding.FragmentSecondBinding;
+import com.skydoves.colorpickerview.listeners.ColorEnvelopeListener;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -123,6 +124,7 @@ public class SecondFragment extends Fragment {
         }
 
 
+
         @SuppressLint("MissingPermission") Set<BluetoothDevice> pairedDevices_ = bluetoothAdapter.getBondedDevices();
 
         if (pairedDevices_.size() > 0) {
@@ -150,6 +152,7 @@ public class SecondFragment extends Fragment {
                     for (BluetoothDevice device : pairedDevices) {
                         // Assume you know the device's name or address
                         if (device.getAddress().equals("E0:5A:1B:77:E5:D2")) {
+                            //E0:5A:1B:77:E5:D2
                             mmDevice = device;
                             break;
                         }
@@ -180,7 +183,7 @@ public class SecondFragment extends Fragment {
                 if (!encryptedMessage.isEmpty()) {
                     try {
                         //sendMessage(encryptedMessage);
-                        sendLeMessage();
+                        sendLeMessage(binding.messageEditText.getText().toString());
                         Toast.makeText(context, "Message sent", Toast.LENGTH_SHORT).show();
                     } catch (IOException e) {
                         binding.statusTextView.setText("Failed to send message: " + e.getMessage());
@@ -254,10 +257,10 @@ public class SecondFragment extends Fragment {
                     String message = encrypt(binding.messageEditText.getText().toString());
                     Log.d("PAIRED DEVICES", "sent message: "+ message );
                     UUID uniqueId = UUID.randomUUID();
-                    BluetoothGattService service = gatt.getService(UUID.fromString("19b10000-e8f2-537e-4f6c-d104768a1214"));
-                    BluetoothGattCharacteristic characteristic = service.getCharacteristic(UUID.fromString("19b10001-e8f2-537e-4f6c-d104768a1214"));
+                    BluetoothGattService service = gatt.getService(UUID.fromString("6E400001-B5A3-F393-E0A9-E50E24DCCA9E"));
+                    BluetoothGattCharacteristic characteristic = service.getCharacteristic(UUID.fromString("6E400002-B5A3-F393-E0A9-E50E24DCCA9E"));
                     mmCharacteristic = characteristic;
-                    //characteristic.setValue("0".getBytes()); // Set the data you want to send
+                    characteristic.setValue("1".getBytes()); // Set the data you want to send
                     //gatt.writeCharacteristic(characteristic);
 
                 }
@@ -280,12 +283,29 @@ public class SecondFragment extends Fragment {
         @SuppressLint("MissingPermission") BluetoothGatt gatt = device.connectGatt(context, false, gattCallback);
         Log.d("PAIRED DEVICES", "device connected");
         binding.statusTextView.setText("Connected to device: " + device.getName());
+
+
+        Context context = binding.colorPickerView.getContext();
+        View view_ = binding.colorPickerView.getFlagView();
+        binding.colorPickerView.setColorListener((ColorEnvelopeListener) (color, fromUser) -> {
+            int[] rgb = color.getArgb();
+//            Log.d("COLOR", rgb[0]+","+rgb[1]+","+rgb[2]+",");
+            Log.d("PAIRED DEVICES", Arrays.toString(rgb));
+            try {
+                sendLeMessage(rgb[1] + "," + rgb[2] + "," + rgb[3]);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+            //LinearLayout linearLayout = findViewById(R.id.linearLayout);
+            //linearLayout.setBackgroundColor(color);
+        });
     }
 
     @SuppressLint("MissingPermission")
-    private void sendLeMessage() throws IOException{
+    private void sendLeMessage(String messageToSend) throws IOException{
         Log.d("PAIRED DEVICES", "message sent via ble.");
-        mmCharacteristic.setValue(binding.messageEditText.getText().toString().getBytes());
+//        Log.d("PAIRED DEVICES", "message: " + mmCharacteristic.toString() );
+        mmCharacteristic.setValue(messageToSend.getBytes());
         mmGatt.writeCharacteristic(mmCharacteristic);
     }
 
