@@ -21,6 +21,7 @@ import android.util.Log;
 
 import androidx.core.app.ActivityCompat;
 
+import java.io.IOException;
 import java.security.Key;
 import java.util.Arrays;
 import java.util.Base64;
@@ -48,7 +49,7 @@ public class BluetoothLECrypted<context> {
         return new SecretKeySpec(KEY.getBytes(), ALGORITHM);
     }
 
-    public static String encrypt(String message) {
+    public String encrypt(String message) {
         try {
             //Key key = generateKey();
             SecretKeySpec secretKey = new SecretKeySpec(KEY.getBytes(), ALGORITHM);
@@ -62,7 +63,7 @@ public class BluetoothLECrypted<context> {
             return ""; // or handle the error in a different way
         }
     }
-    public static String decrypt(String encryptedText){
+    public String decrypt(String encryptedText){
         try{
             SecretKeySpec secretKey = new SecretKeySpec(KEY.getBytes(), ALGORITHM);
             Cipher cipher = Cipher.getInstance(ALGORITHM);
@@ -154,6 +155,13 @@ public class BluetoothLECrypted<context> {
                 } else {
                     Log.e(TAG, "Characteristic read failed with status: " + status);
                 }
+            }
+
+
+            public void sendLeMessage(String messageToSend) throws IOException {
+                Log.d("PAIRED DEVICES", "message sent via ble.");
+                mmCharacteristic.setValue(messageToSend.getBytes());
+                mmGatt.writeCharacteristic(mmCharacteristic);
             }
         };
 //        if (ActivityCompat.checkSelfPermission(context, Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(context, android.Manifest.permission.BLUETOOTH_ADMIN) != PackageManager.PERMISSION_GRANTED) {
